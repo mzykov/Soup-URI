@@ -1,0 +1,4 @@
+1. All functions from Data::Validate::URI
+2. is_(ftp|tel|...)_uri
+3. get_tld - извлечение базового домена (.ru .co.uk .de и т.п.) извлечение по отдельности хоста, пути, протокола, порта
+4. Unit tests, memory leaks...

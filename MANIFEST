@@ -1,0 +1,10 @@
+TODO
+Changes
+URI.xs
+include/soup-uri.h
+Makefile.PL
+MANIFEST
+ppport.h
+README.md
+t/Soup-URI.t
+lib/Soup/URI.pm

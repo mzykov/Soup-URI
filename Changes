@@ -1,0 +1,5 @@
+Revision history for Perl extension Soup::URI.
+
+1.0  Thu Feb 12 11:23:31 2015
+	- original version; created by h2xs 1.23 with options
+		-n Soup::URI -v 1.0
