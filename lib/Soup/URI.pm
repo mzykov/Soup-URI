@@ -38,6 +38,10 @@ Module has written using XS.
 
 None by default.
 
+=head1 SEE ALSO
+
+  URI, Data::Validate::URI
+
 =head1 AUTHOR
 
 Zykov Mikhail, E<lt>zmsmihail@yandex.ruE<gt>
