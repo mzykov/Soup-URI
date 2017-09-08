@@ -6,5 +6,8 @@ Makefile.PL
 MANIFEST
 ppport.h
 README.md
-t/Soup-URI.t
 lib/Soup/URI.pm
+t/Soup-URI.t
+t/uri-match.t
+t/is-uri.t
+t/is-web-uri.t

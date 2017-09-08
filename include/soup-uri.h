@@ -8,10 +8,12 @@
 #  define WWW_PREFIX "www."
 #endif
 
-gboolean
+#define SOUP_URI_ERROR (-1)
+
+gint
 soup_uri_match (SoupURI*, SoupURI*, gboolean);
 
-gboolean
+gint
 soup_uri_is_external (SoupURI*, SoupURI*, gboolean);
 
 gint

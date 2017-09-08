@@ -9,12 +9,13 @@
      g_utf8_validate (const gchar *str,
                       gssize max_len,
                       const gchar **end); */
-gboolean
+
+/* TODO: write a piece of comment */
+gint
 soup_uri_match (SoupURI *parent, SoupURI *child, gboolean allow_mirror)
 {
-  GFile    *file = NULL;
-  gchar    *prefix = NULL;
-  gboolean  result = FALSE;
+  GFile *file   = NULL;
+  gchar *prefix = NULL;
   
   if (soup_uri_is_external(parent, child, allow_mirror)) {
     return FALSE;
@@ -24,41 +25,41 @@ soup_uri_match (SoupURI *parent, SoupURI *child, gboolean allow_mirror)
     prefix = (gchar *)soup_uri_get_path(parent);
     
     if (g_str_has_prefix(soup_uri_get_path(child), (const gchar *)prefix)) {
-      result = TRUE;
+      return TRUE;
     }
   }
   else {
-    file = g_file_new_for_path(soup_uri_get_path(parent));
+    file   = g_file_new_for_path(soup_uri_get_path(parent));
     prefix = g_file_get_path(file);
+    
     g_object_unref(file);
     
     if (prefix == NULL) {
-      g_error("Cannot get file path for SoupURI\n");
+      return SOUP_URI_ERROR;
     }
     
-    if (g_str_has_prefix(soup_uri_get_path(child), (const gchar *)prefix)) {
-      result = TRUE;
-    }
+    gboolean matched = FALSE;
+    matched = g_str_has_prefix(soup_uri_get_path(child), (const gchar *)prefix);
     
     g_free(prefix);
+    return matched;
   }
   
-  return result;
+  return FALSE;
 }
 
-gboolean
+gint
 soup_uri_is_external (SoupURI *base, SoupURI *href, gboolean allow_mirror)
 {
-  gboolean  result = FALSE;
-  gchar    *base_host = NULL,
-           *href_host = NULL;
+  gchar *base_host = NULL,
+        *href_host = NULL;
   
   base_host = allow_mirror ? 
                  soup_uri_get_www_mirror(base) :
                     soup_uri_hostname_lowercase(base);
   
   if (base_host == NULL) {
-    g_error("Cannot get main mirror for base %s\n", soup_uri_get_host(base));
+    return SOUP_URI_ERROR;
   }
   
   href_host = allow_mirror ? 
@@ -67,26 +68,29 @@ soup_uri_is_external (SoupURI *base, SoupURI *href, gboolean allow_mirror)
   
   if (href_host == NULL) {
     g_free(base_host);
-    g_error("Cannot get main mirror for href %s\n", soup_uri_get_host(href));
+    return SOUP_URI_ERROR;
   }
   
-  if (g_utf8_collate((const gchar *)base_host, (const gchar *)href_host) != 0) {
-    result = TRUE;
-  }
+  gint collate;
+  collate = g_utf8_collate((const gchar *)base_host, (const gchar *)href_host);
   
   g_free(base_host);
   g_free(href_host);
   
-  return result;
+  return collate != 0 ? TRUE : FALSE;
 }
 
 gchar*
 soup_uri_get_www_mirror (SoupURI *uri)
 {
-  gchar *host = NULL,
+  gchar *host   = NULL,
         *mirror = NULL;
   
   host = soup_uri_hostname_lowercase(uri);
+  
+  if (host == NULL) {
+    return NULL;
+  }
   
   if (g_str_has_prefix((const gchar *)host, WWW_PREFIX)) {
     mirror = host;
@@ -111,7 +115,7 @@ soup_uri_hostname_lowercase (SoupURI *uri)
   host = g_strdup(soup_uri_get_host(uri));
   
   if (host == NULL) {
-    g_error("Cannot copy SoupURI host\n");
+    return NULL;
   }
   
   if (g_hostname_is_ascii_encoded((const gchar *)host)) {
@@ -119,7 +123,7 @@ soup_uri_hostname_lowercase (SoupURI *uri)
     g_free(host);
     
     if (utf8 == NULL) {
-      g_error("Cannot translate hostname to unicode\n");
+      return NULL;
     }
   } else {
     utf8 = host;
@@ -129,7 +133,7 @@ soup_uri_hostname_lowercase (SoupURI *uri)
   g_free(utf8);
   
   if (utf8lo == NULL) {
-    g_error("Cannot lowercase unicode hostname\n");
+    return NULL;
   }
   
   return utf8lo;
@@ -137,7 +141,7 @@ soup_uri_hostname_lowercase (SoupURI *uri)
 
 MODULE = Soup::URI		PACKAGE = Soup::URI
 
-bool
+int
 is_uri(uri)
 		const char *uri
 	INIT:
@@ -145,16 +149,22 @@ is_uri(uri)
 	CODE:
 		if (uri != NULL) {
 		  URI = soup_uri_new(uri);
-		  RETVAL = SOUP_URI_IS_VALID(URI);
-		  soup_uri_free(URI);
+		  
+		  if (URI != NULL) {
+		    RETVAL = SOUP_URI_IS_VALID(URI) ? TRUE : FALSE;
+		    soup_uri_free(URI);
+		  }
+		  else {
+		    RETVAL = FALSE;
+		  }
 		}
 		else {
-		  RETVAL = &PL_sv_undef;
+		  RETVAL = FALSE;
 		}
 	OUTPUT:
 		RETVAL
 
-bool
+int
 is_web_uri(uri)
 		const char *uri
 	INIT:
@@ -162,44 +172,50 @@ is_web_uri(uri)
 	CODE:
 		if (uri != NULL) {
 		  URI = soup_uri_new(uri);
-		  RETVAL = SOUP_URI_VALID_FOR_HTTP(URI);
-		  soup_uri_free(URI);
+		  
+		  if (URI != NULL) {
+		    RETVAL = SOUP_URI_VALID_FOR_HTTP(URI) ? TRUE: FALSE;
+		    soup_uri_free(URI);
+		  }
+		  else {
+		    RETVAL = FALSE;
+		  }
 		}
 		else {
-		  RETVAL = &PL_sv_undef;
+		  RETVAL = FALSE;
 		}
 	OUTPUT:
 		RETVAL
 
-bool
-uri_match(uri1, uri2, allow_mirror)
+int
+uri_match(uri1, uri2, allow_mirror = FALSE)
 		const char *uri1
 		const char *uri2
 		bool        allow_mirror
 	INIT:
-		if (!allow_mirror) {
-		  allow_mirror = false;
-		}
-		
 		SoupURI *child = NULL,
 		        *parent = NULL;
 	CODE:
 		if (uri1 == NULL || uri2 == NULL) {
-		  RETVAL = &PL_sv_undef;
+		  RETVAL = SOUP_URI_ERROR;
 		}
 		else {
 		  parent = soup_uri_new(uri1);
 		  child  = soup_uri_new(uri2);
 		  
-		  if (SOUP_URI_IS_VALID(parent) && SOUP_URI_IS_VALID(child)) {
+		  if (SOUP_URI_IS_VALID(parent) &&
+		      SOUP_URI_IS_VALID(child)) {
 		    RETVAL = soup_uri_match(parent, child, allow_mirror);
 		  }
 		  else {
-		    RETVAL = &PL_sv_undef;
+		    RETVAL = SOUP_URI_ERROR;
 		  }
 		  
-		  soup_uri_free(child);
-		  soup_uri_free(parent);
+		  if (child != NULL)
+		    soup_uri_free(child);
+		  
+		  if (parent != NULL)
+		    soup_uri_free(parent);
 		}
 	OUTPUT:
 		RETVAL
