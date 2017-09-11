@@ -5,7 +5,8 @@
 #endif
 
 #ifndef WWW_PREFIX
-#  define WWW_PREFIX "www."
+#  define WWW_PREFIX        "www."
+#  define WWW_PREFIX_LENGTH 4
 #endif
 
 #define SOUP_URI_ERROR (-1)

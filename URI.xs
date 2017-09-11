@@ -3,6 +3,7 @@
 #include "XSUB.h"
 #include "ppport.h"
 #include "soup-uri.h"
+#include <stdio.h>
 
 /* TODO: use 
      gboolean
@@ -48,62 +49,46 @@ soup_uri_match (SoupURI *parent, SoupURI *child, gboolean allow_mirror)
   return FALSE;
 }
 
-/* TODO: избавиться здесь от операций с памятью!
-         Не добавлять "www.", а сдвигать указатель на 4 символа!
-*/
 gint
 soup_uri_is_external (SoupURI *base, SoupURI *href, gboolean allow_mirror)
 {
-  gchar *base_host = NULL,
-        *href_host = NULL;
+  gchar *base_host = NULL, *base_host_ref = NULL,
+        *href_host = NULL, *href_host_ref = NULL;
   
-  base_host = allow_mirror ? 
-                 soup_uri_get_www_mirror(base) :
-                    soup_uri_hostname_lowercase(base);
+  base_host = soup_uri_hostname_lowercase(base);
   
   if (base_host == NULL) {
     return SOUP_URI_ERROR;
   }
   
-  href_host = allow_mirror ? 
-                 soup_uri_get_www_mirror(href) :
-                    soup_uri_hostname_lowercase(href);
+  base_host_ref = base_host;
+  
+  href_host = soup_uri_hostname_lowercase(href);
   
   if (href_host == NULL) {
     g_free(base_host);
     return SOUP_URI_ERROR;
   }
   
+  href_host_ref = href_host;
+  
+  if (allow_mirror) {
+    if (g_str_has_prefix((const gchar *)base_host, WWW_PREFIX)) {
+      base_host_ref += WWW_PREFIX_LENGTH;
+    }
+    
+    if (g_str_has_prefix((const gchar *)href_host, WWW_PREFIX)) {
+      href_host_ref += WWW_PREFIX_LENGTH;
+    }
+  }
+  
   gint collate;
-  collate = g_utf8_collate((const gchar *)base_host, (const gchar *)href_host);
+  collate = g_utf8_collate((const gchar *)base_host_ref, (const gchar *)href_host_ref);
   
   g_free(base_host);
   g_free(href_host);
   
   return collate != 0 ? TRUE : FALSE;
-}
-
-gchar*
-soup_uri_get_www_mirror (SoupURI *uri)
-{
-  gchar *host   = NULL,
-        *mirror = NULL;
-  
-  host = soup_uri_hostname_lowercase(uri);
-  
-  if (host == NULL) {
-    return NULL;
-  }
-  
-  if (g_str_has_prefix((const gchar *)host, WWW_PREFIX)) {
-    mirror = host;
-  }
-  else {
-    mirror = g_strconcat(WWW_PREFIX, (const gchar *)host, NULL);
-    g_free(host);
-  }
-  
-  return mirror;
 }
 
 gchar*
