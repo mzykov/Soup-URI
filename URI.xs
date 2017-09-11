@@ -48,6 +48,9 @@ soup_uri_match (SoupURI *parent, SoupURI *child, gboolean allow_mirror)
   return FALSE;
 }
 
+/* TODO: избавиться здесь от операций с памятью!
+         Не добавлять "www.", а сдвигать указатель на 4 символа!
+*/
 gint
 soup_uri_is_external (SoupURI *base, SoupURI *href, gboolean allow_mirror)
 {
