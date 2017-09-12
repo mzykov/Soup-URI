@@ -1,4 +1,12 @@
-1. All functions from Data::Validate::URI
-2. is_(ftp|tel|...)_uri
-3. get_tld - извлечение базового домена (.ru .co.uk .de и т.п.) извлечение по отдельности хоста, пути, протокола, порта
-4. Unit tests, memory leaks...
+1.  soup_tld_get_base_domain           - извлечение базового домена
+2.  soup_tld_domain_is_public_suffix   - проверка суффикса (.ru .co.uk .de и т.п.)
+3.  soup_uri_new_with_base             - построение урла на основе базового
+4.  soup_uri_copy                      - копирование урла (м.б. и отдельно хоста)
+5.  is_uri_ws(s)                       - requires libsoup-2.5
+6.  soup_uri_host_hash                 - полезное хеширование
+7.  soup_uri_(encode|decode|normalize) - стандартное URIрование
+8.  soup_uri_uses_default_port         - стандартный порт или нет (для протокола)
+9.  soup_uri_(g|s)et_(scheme|user|password|host|port|path|query|fragment) - установка и получение всего и вся.
+10. Unit tests, memory leaks...
+11. Использовать проверку g_hostname_is_ip_address (CRITICAL)
+

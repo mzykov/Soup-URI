@@ -26,3 +26,6 @@ soup_uri_get_www_mirror (SoupURI*);
 gchar*
 soup_uri_hostname_lowercase (SoupURI*);
 
+gint
+soup_uri_validate_for_scheme (const char*, const char*);
+

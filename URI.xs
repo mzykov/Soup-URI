@@ -127,6 +127,33 @@ soup_uri_hostname_lowercase (SoupURI *uri)
   return utf8lo;
 }
 
+gint
+soup_uri_validate_for_scheme (const char *uri, const char *scheme)
+{
+  SoupURI *URI = NULL;
+  gint retval = SOUP_URI_ERROR;
+  
+  if (uri != NULL) {
+    URI = soup_uri_new(uri);
+    
+    if (URI != NULL) {
+      if (SOUP_URI_IS_VALID(URI) && URI->host) {
+        if (URI->scheme == scheme) {
+          retval = TRUE; /* libsoup standard scheme */
+        }
+        else {
+          /* non-standard scheme */
+          retval = g_ascii_strcasecmp(URI->scheme, scheme) == 0 ? TRUE : FALSE;
+        }
+      }
+      
+      soup_uri_free(URI);
+    }
+  }
+  
+  return retval;
+}
+
 MODULE = Soup::URI		PACKAGE = Soup::URI
 
 int
@@ -172,6 +199,70 @@ is_web_uri(uri)
 		else {
 		  RETVAL = FALSE;
 		}
+	OUTPUT:
+		RETVAL
+
+int
+is_http_uri(uri)
+		const char *uri
+	CODE:
+		RETVAL = soup_uri_validate_for_scheme(uri, SOUP_URI_SCHEME_HTTP) > 0 ? TRUE: FALSE;
+	OUTPUT:
+		RETVAL
+
+int
+is_https_uri(uri)
+		const char *uri
+	CODE:
+		RETVAL = soup_uri_validate_for_scheme(uri, SOUP_URI_SCHEME_HTTPS) > 0 ? TRUE: FALSE;
+	OUTPUT:
+		RETVAL
+
+int
+is_ftp_uri(uri)
+		const char *uri
+	CODE:
+		RETVAL = soup_uri_validate_for_scheme(uri, SOUP_URI_SCHEME_FTP) > 0 ? TRUE: FALSE;
+	OUTPUT:
+		RETVAL
+
+int
+is_data_uri(uri)
+		const char *uri
+	CODE:
+		RETVAL = soup_uri_validate_for_scheme(uri, SOUP_URI_SCHEME_DATA) > 0 ? TRUE: FALSE;
+	OUTPUT:
+		RETVAL
+
+int
+is_resource_uri(uri)
+		const char *uri
+	CODE:
+		RETVAL = soup_uri_validate_for_scheme(uri, SOUP_URI_SCHEME_RESOURCE) > 0 ? TRUE: FALSE;
+	OUTPUT:
+		RETVAL
+
+int
+is_file_uri(uri)
+		const char *uri
+	CODE:
+		RETVAL = soup_uri_validate_for_scheme(uri, SOUP_URI_SCHEME_FILE) > 0 ? TRUE: FALSE;
+	OUTPUT:
+		RETVAL
+
+int
+is_ftps_uri(uri)
+		const char *uri
+	CODE:
+		RETVAL = soup_uri_validate_for_scheme(uri, "ftps") > 0 ? TRUE: FALSE;
+	OUTPUT:
+		RETVAL
+
+int
+is_tel_uri(uri)
+		const char *uri
+	CODE:
+		RETVAL = soup_uri_validate_for_scheme(uri, "tel") > 0 ? TRUE: FALSE;
 	OUTPUT:
 		RETVAL
 
