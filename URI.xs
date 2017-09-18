@@ -18,33 +18,55 @@ soup_uri_match (SoupURI *parent, SoupURI *child, gboolean allow_mirror)
   GFile *file   = NULL;
   gchar *prefix = NULL;
   
-  if (soup_uri_is_external(parent, child, allow_mirror)) {
+  gboolean parent_is_ip = FALSE,
+           child_is_ip  = FALSE;
+  
+  /* Returns immidiatly if scheme or port are differ */
+  if (soup_uri_get_scheme(parent) != soup_uri_get_scheme(child) || 
+      soup_uri_get_port(parent)   != soup_uri_get_port(child)) {
     return FALSE;
   }
   
-  if (g_str_has_suffix(soup_uri_get_path(parent), PATH_SEPARATOR)) {
-    prefix = (gchar *)soup_uri_get_path(parent);
-    
-    if (g_str_has_prefix(soup_uri_get_path(child), (const gchar *)prefix)) {
-      return TRUE;
-    }
-  }
-  else {
-    file   = g_file_new_for_path(soup_uri_get_path(parent));
-    prefix = g_file_get_path(file);
-    
-    g_object_unref(file);
-    
-    if (prefix == NULL) {
-      return SOUP_URI_ERROR;
+  parent_is_ip = g_hostname_is_ip_address(soup_uri_get_host(parent));
+  child_is_ip  = g_hostname_is_ip_address(soup_uri_get_host(child));
+  
+  /* Two normal hosts, the most common case */
+  if (!parent_is_ip && !child_is_ip) {
+    if (soup_uri_is_external(parent, child, allow_mirror)) {
+      return FALSE;
     }
     
-    gboolean matched = FALSE;
-    matched = g_str_has_prefix(soup_uri_get_path(child), (const gchar *)prefix);
-    
-    g_free(prefix);
-    return matched;
+    if (g_str_has_suffix(soup_uri_get_path(parent), PATH_SEPARATOR)) {
+      prefix = (gchar *)soup_uri_get_path(parent);
+      
+      if (g_str_has_prefix(soup_uri_get_path(child), (const gchar *)prefix)) {
+        return TRUE;
+      }
+    }
+    else {
+      file   = g_file_new_for_path(soup_uri_get_path(parent));
+      prefix = g_file_get_path(file);
+      
+      g_object_unref(file);
+      
+      if (prefix == NULL) {
+        return SOUP_URI_ERROR;
+      }
+      
+      gboolean matched = FALSE;
+      matched = g_str_has_prefix(soup_uri_get_path(child), (const gchar *)prefix);
+      
+      g_free(prefix);
+      return matched;
+    }
   }
+  /* Two ip addresses, rare case */
+  else if (parent_is_ip && child_is_ip) {
+    return soup_uri_host_equal((gconstpointer)parent,(gconstpointer)child);
+  }
+  
+  /* We do not know how to 
+     compare host against ip address */
   
   return FALSE;
 }
