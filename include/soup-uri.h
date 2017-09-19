@@ -11,21 +11,20 @@
 
 #define SOUP_URI_ERROR (-1)
 
-gint
-soup_uri_match (SoupURI*, SoupURI*, gboolean);
+#define SOUP_URI_MATCH_MIRROR    (1)
+#define SOUP_URI_MATCH_SUBDOMAIN (2) /* implies SOUP_URI_MATCH_MIRROR */
 
 gint
-soup_uri_is_external (SoupURI*, SoupURI*, gboolean);
+soup_uri_match (SoupURI*, SoupURI*, guint);
 
 gint
-g_hostname_utf8_cmp (const gchar*, const gchar*);
-
-gchar*
-soup_uri_get_www_mirror (SoupURI*);
+soup_uri_is_external (SoupURI*, SoupURI*, guint);
 
 gchar*
 soup_uri_hostname_lowercase (SoupURI*);
 
 gint
 soup_uri_validate_for_scheme (const char*, const char*);
+
+/* __END__ */
 

@@ -13,7 +13,7 @@
 
 /* TODO: write a piece of comment */
 gint
-soup_uri_match (SoupURI *parent, SoupURI *child, gboolean allow_mirror)
+soup_uri_match (SoupURI *parent, SoupURI *child, guint match_flags)
 {
   GFile *file   = NULL;
   gchar *prefix = NULL;
@@ -32,7 +32,7 @@ soup_uri_match (SoupURI *parent, SoupURI *child, gboolean allow_mirror)
   
   /* Two normal hosts, the most common case */
   if (!parent_is_ip && !child_is_ip) {
-    if (soup_uri_is_external(parent, child, allow_mirror)) {
+    if (soup_uri_is_external(parent, child, match_flags)) {
       return FALSE;
     }
     
@@ -72,7 +72,7 @@ soup_uri_match (SoupURI *parent, SoupURI *child, gboolean allow_mirror)
 }
 
 gint
-soup_uri_is_external (SoupURI *base, SoupURI *href, gboolean allow_mirror)
+soup_uri_is_external (SoupURI *base, SoupURI *href, guint match_flags)
 {
   gchar *base_host = NULL, *base_host_ref = NULL,
         *href_host = NULL, *href_host_ref = NULL;
@@ -94,14 +94,37 @@ soup_uri_is_external (SoupURI *base, SoupURI *href, gboolean allow_mirror)
   
   href_host_ref = href_host;
   
-  if (allow_mirror) {
-    if (g_str_has_prefix((const gchar *)base_host, WWW_PREFIX)) {
-      base_host_ref += WWW_PREFIX_LENGTH;
-    }
+  switch (match_flags) {
+    case SOUP_URI_MATCH_MIRROR:
+      if (g_str_has_prefix((const gchar *)base_host, WWW_PREFIX)) {
+        base_host_ref += WWW_PREFIX_LENGTH;
+      }
+      
+      if (g_str_has_prefix((const gchar *)href_host, WWW_PREFIX)) {
+        href_host_ref += WWW_PREFIX_LENGTH;
+      }
+      break;
     
-    if (g_str_has_prefix((const gchar *)href_host, WWW_PREFIX)) {
-      href_host_ref += WWW_PREFIX_LENGTH;
-    }
+    case SOUP_URI_MATCH_SUBDOMAIN:
+      /* TODO: check GError */
+      base_host_ref = (gchar *)soup_tld_get_base_domain(base_host, NULL);
+      
+      if (base_host_ref == NULL) {
+        /* maybe private domain? */
+        base_host_ref = base_host;
+      }
+      
+      /* TODO: check GError */
+      href_host_ref = (gchar *)soup_tld_get_base_domain(href_host, NULL);
+      
+      if (href_host_ref == NULL) {
+        /* maybe private domain? */
+        href_host_ref = href_host;
+      }
+      break;
+    
+    default:
+      break;
   }
   
   gint collate;
@@ -289,10 +312,10 @@ is_tel_uri(uri)
 		RETVAL
 
 int
-uri_match(uri1, uri2, allow_mirror = FALSE)
-		const char *uri1
-		const char *uri2
-		bool        allow_mirror
+uri_match(uri1, uri2, match_flags = 0)
+		const char   *uri1
+		const char   *uri2
+		unsigned int  match_flags
 	INIT:
 		SoupURI *child = NULL,
 		        *parent = NULL;
@@ -306,7 +329,7 @@ uri_match(uri1, uri2, allow_mirror = FALSE)
 		  
 		  if (SOUP_URI_IS_VALID(parent) &&
 		      SOUP_URI_IS_VALID(child)) {
-		    RETVAL = soup_uri_match(parent, child, allow_mirror);
+		    RETVAL = soup_uri_match(parent, child, match_flags);
 		  }
 		  else {
 		    RETVAL = SOUP_URI_ERROR;
@@ -320,3 +343,4 @@ uri_match(uri1, uri2, allow_mirror = FALSE)
 		}
 	OUTPUT:
 		RETVAL
+
