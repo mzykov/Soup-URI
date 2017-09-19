@@ -1,4 +1,4 @@
-1.  soup_tld_get_base_domain           - извлечение базового домена
+1.  soup_tld_get_base_domain           - извлечение базового домена из готового хоста
 2.  soup_tld_domain_is_public_suffix   - проверка суффикса (.ru .co.uk .de и т.п.)
 3.  soup_uri_new_with_base             - построение урла на основе базового
 4.  soup_uri_copy                      - копирование урла (м.б. и отдельно хоста)

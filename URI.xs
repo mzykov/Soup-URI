@@ -344,3 +344,40 @@ uri_match(uri1, uri2, match_flags = 0)
 	OUTPUT:
 		RETVAL
 
+SV*
+uri_base_domain(url)
+		const char *url
+	INIT:
+		SoupURI *uri = NULL;
+		SV *result;
+		const char *hostname;
+		const char *domain;
+	CODE:
+		uri = soup_uri_new(url);
+		
+		if (uri != NULL) {
+		  hostname = soup_uri_get_host(uri);
+		  
+		  if (hostname == NULL) {
+		    RETVAL = &PL_sv_undef;
+		  }
+		  else {
+                    /* TODO: check GError */
+		    domain = soup_tld_get_base_domain(hostname, NULL);
+		    
+		    if (domain == NULL) {
+		      RETVAL = &PL_sv_undef;
+		    }
+		    else {
+		      RETVAL = sv_2mortal(newSVpv(domain, 0));
+		    }
+		  }
+		  
+		  soup_uri_free(uri);
+		}
+		else {
+		  warn("get_base_domain: soup_uri_new failed\n");
+		  RETVAL = &PL_sv_undef;
+		}
+	OUTPUT:
+		RETVAL
