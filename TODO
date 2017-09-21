@@ -1,6 +1,6 @@
 1. is_ws(s)_uri (requires libsoup-2.5)
 2. is_(mailto|gopher|...)_uri
-3. soup_uri_get_(scheme|user|password|host|port|path|query|fragment)
+3. Add policy to make uri query form. 1 - replace duplicate keys, 0 - make an arrayref of values
 4. OO interface Soup::URI->new(char *url), (g|s)et_*, clone, with_base, as_string, overload...
 5. Unit tests, check for memory leaks...
 6. Comment/Document all functions/methods

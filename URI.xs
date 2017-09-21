@@ -204,7 +204,7 @@ soup_uri_validate_for_scheme (const char *uri, const char *scheme)
    form_decode and soup_uri_form_decode
    is derived from libsoup-2.4
  */
-gboolean
+static gboolean
 form_decode (char *part)
 {
   unsigned char *s, *d;
@@ -238,10 +238,12 @@ soup_uri_form_decode (const char *encoded_form)
   HV *form_data_set = NULL;
   SV **ok = NULL;
   
+  gboolean anything_stored = FALSE;
+  
   char **pairs, *eq, *name, *value;
   int i;
   
-  form_data_set = (HV *)sv_2mortal((SV *)newHV());
+  form_data_set = newHV();
   
   if (form_data_set == NULL) {
     warn("soup_uri_form_decode: failed to create new HV\n");
@@ -276,9 +278,17 @@ soup_uri_form_decode (const char *encoded_form)
       warn("soup_uri_form_decode: cannot store key\n");
       continue;
     }
+    
+    anything_stored = TRUE;
   }
   
   g_free(pairs);
+  
+  if (!anything_stored) {
+    warn("soup_uri_form_decode: none pairs stored\n");
+    hv_undef(form_data_set);
+    return NULL;
+  }
   
   return form_data_set;
 }
@@ -701,3 +711,300 @@ uri_with_base(url, base)
 		}
 	OUTPUT:
 		RETVAL
+
+SV*
+uri_get_scheme(url) 
+		const char *url
+	INIT:
+		SoupURI *uri = NULL;
+		const char *scheme;
+	CODE:
+		if (url != NULL) {
+		  uri = soup_uri_new(url);
+		  
+		  if (uri != NULL) {
+		    scheme = soup_uri_get_scheme(uri);
+		    
+		    if (scheme != NULL) {
+		      RETVAL = sv_2mortal(newSVpv(scheme,0));
+		    }
+		    else {
+		      RETVAL = &PL_sv_undef;
+		    }
+		    
+		    soup_uri_free(uri);
+		  }
+		  else {
+		    RETVAL = &PL_sv_undef;
+		  }
+		}
+		else {
+		  RETVAL = &PL_sv_undef;
+		}
+	OUTPUT:
+		RETVAL
+
+SV*
+uri_get_user(url) 
+		const char *url
+	INIT:
+		SoupURI *uri = NULL;
+		const char *user;
+	CODE:
+		if (url != NULL) {
+		  uri = soup_uri_new(url);
+		  
+		  if (uri != NULL) {
+		    user = soup_uri_get_user(uri);
+		    
+		    if (user != NULL) {
+		      RETVAL = sv_2mortal(newSVpv(user,0));
+		    }
+		    else {
+		      RETVAL = &PL_sv_undef;
+		    }
+		    
+		    soup_uri_free(uri);
+		  }
+		  else {
+		    RETVAL = &PL_sv_undef;
+		  }
+		}
+		else {
+		  RETVAL = &PL_sv_undef;
+		}
+	OUTPUT:
+		RETVAL
+
+SV*
+uri_get_password(url) 
+		const char *url
+	INIT:
+		SoupURI *uri = NULL;
+		const char *password;
+	CODE:
+		if (url != NULL) {
+		  uri = soup_uri_new(url);
+		  
+		  if (uri != NULL) {
+		    password = soup_uri_get_password(uri);
+		    
+		    if (password != NULL) {
+		      RETVAL = sv_2mortal(newSVpv(password,0));
+		    }
+		    else {
+		      RETVAL = &PL_sv_undef;
+		    }
+		    
+		    soup_uri_free(uri);
+		  }
+		  else {
+		    RETVAL = &PL_sv_undef;
+		  }
+		}
+		else {
+		  RETVAL = &PL_sv_undef;
+		}
+	OUTPUT:
+		RETVAL
+
+SV*
+uri_get_host(url) 
+		const char *url
+	INIT:
+		SoupURI *uri = NULL;
+		const char *host;
+	CODE:
+		if (url != NULL) {
+		  uri = soup_uri_new(url);
+		  
+		  if (uri != NULL) {
+		    host = soup_uri_get_host(uri);
+		    
+		    if (host != NULL) {
+		      RETVAL = sv_2mortal(newSVpv(host,0));
+		    }
+		    else {
+		      RETVAL = &PL_sv_undef;
+		    }
+		    
+		    soup_uri_free(uri);
+		  }
+		  else {
+		    RETVAL = &PL_sv_undef;
+		  }
+		}
+		else {
+		  RETVAL = &PL_sv_undef;
+		}
+	OUTPUT:
+		RETVAL
+
+SV*
+uri_get_port(url) 
+		const char *url
+	INIT:
+		SoupURI *uri = NULL;
+		UV port;
+	CODE:
+		if (url != NULL) {
+		  uri = soup_uri_new(url);
+		  
+		  if (uri != NULL) {
+		    port = (UV)soup_uri_get_port(uri);
+		    
+		    if (port) {
+		      RETVAL = sv_2mortal(newSVuv(port));
+		    }
+		    else {
+		      RETVAL = &PL_sv_undef;
+		    }
+		    
+		    soup_uri_free(uri);
+		  }
+		  else {
+		    RETVAL = &PL_sv_undef;
+		  }
+		}
+		else {
+		  RETVAL = &PL_sv_undef;
+		}
+	OUTPUT:
+		RETVAL
+
+SV*
+uri_get_path(url) 
+		const char *url
+	INIT:
+		SoupURI *uri = NULL;
+		const char *path;
+	CODE:
+		if (url != NULL) {
+		  uri = soup_uri_new(url);
+		  
+		  if (uri != NULL) {
+		    path = soup_uri_get_path(uri);
+		    
+		    if (path != NULL) {
+		      RETVAL = sv_2mortal(newSVpv(path,0));
+		    }
+		    else {
+		      RETVAL = &PL_sv_undef;
+		    }
+		    
+		    soup_uri_free(uri);
+		  }
+		  else {
+		    RETVAL = &PL_sv_undef;
+		  }
+		}
+		else {
+		  RETVAL = &PL_sv_undef;
+		}
+	OUTPUT:
+		RETVAL
+
+SV*
+uri_get_fragment(url) 
+		const char *url
+	INIT:
+		SoupURI *uri = NULL;
+		const char *fragment;
+	CODE:
+		if (url != NULL) {
+		  uri = soup_uri_new(url);
+		  
+		  if (uri != NULL) {
+		    fragment = soup_uri_get_fragment(uri);
+		    
+		    if (fragment != NULL) {
+		      RETVAL = sv_2mortal(newSVpv(fragment,0));
+		    }
+		    else {
+		      RETVAL = &PL_sv_undef;
+		    }
+		    
+		    soup_uri_free(uri);
+		  }
+		  else {
+		    RETVAL = &PL_sv_undef;
+		  }
+		}
+		else {
+		  RETVAL = &PL_sv_undef;
+		}
+	OUTPUT:
+		RETVAL
+
+SV*
+uri_get_query_string(url) 
+		const char *url
+	INIT:
+		SoupURI *uri = NULL;
+		const char *query;
+	CODE:
+		if (url != NULL) {
+		  uri = soup_uri_new(url);
+		  
+		  if (uri != NULL) {
+		    query = soup_uri_get_query(uri);
+		    
+		    if (query != NULL) {
+		      RETVAL = sv_2mortal(newSVpv(query,0));
+		    }
+		    else {
+		      RETVAL = &PL_sv_undef;
+		    }
+		    
+		    soup_uri_free(uri);
+		  }
+		  else {
+		    RETVAL = &PL_sv_undef;
+		  }
+		}
+		else {
+		  RETVAL = &PL_sv_undef;
+		}
+	OUTPUT:
+		RETVAL
+
+SV*
+uri_get_query_form(url) 
+		const char *url
+	INIT:
+		SoupURI *uri = NULL;
+		HV *query_form;
+		const char *query_string;
+	CODE:
+		if (url != NULL) {
+		  uri = soup_uri_new(url);
+		  
+		  if (uri != NULL) {
+		    query_string = soup_uri_get_query(uri);
+		    
+		    if (query_string != NULL) {
+		      query_form = soup_uri_form_decode(query_string);
+		      
+		      if (query_form != NULL) {
+		        RETVAL = newRV_inc(sv_2mortal((SV *)query_form));
+		      }
+		      else {
+		        RETVAL = &PL_sv_undef;
+		      }
+		    }
+		    else {
+		      RETVAL = &PL_sv_undef;
+		    }
+		    
+		    soup_uri_free(uri);
+		  }
+		  else {
+		    RETVAL = &PL_sv_undef;
+		  }
+		}
+		else {
+		  RETVAL = &PL_sv_undef;
+		}
+	OUTPUT:
+		RETVAL
+
