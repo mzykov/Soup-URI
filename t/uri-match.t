@@ -21,7 +21,7 @@ ok(uri_match($url0, $url1, 1) == 1);
 ok(uri_match($url0, $url1)    == 0);
 ok(uri_match($url0, $url2, 1) == 0);
 ok(uri_match($url0, $url3, 0) == 0);
-ok(uri_match($url0, $url4, 1) == -1);
+ok(!defined uri_match($url0, $url4, 1));
 ok(uri_match($url5, $url6, 1) == 1);
 ok(uri_match($url7, $url8, 1) == 1);
 
